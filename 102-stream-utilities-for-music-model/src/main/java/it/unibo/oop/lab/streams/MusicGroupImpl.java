@@ -1,6 +1,5 @@
 package it.unibo.oop.lab.streams;
 
-import java.lang.StackWalker.Option;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,7 +51,7 @@ public final class MusicGroupImpl implements MusicGroup {
     public int countSongs(final String albumName) {
         return (int) this.songs.stream()
                     .filter(t -> t.getAlbumName().isPresent())
-                    .filter(t -> t.getAlbumName().get() == albumName)
+                    .filter(t -> t.getAlbumName().get().equals(albumName))
                     .count();
     }
 
@@ -67,7 +66,7 @@ public final class MusicGroupImpl implements MusicGroup {
     public OptionalDouble averageDurationOfSongs(final String albumName) {
         return this.songs.stream()
             .filter(t -> t.getAlbumName().isPresent())
-            .filter(t -> t.getAlbumName().get() == albumName)
+            .filter(t -> t.getAlbumName().get().equals(albumName))
             .mapToDouble(t -> t.getDuration())
             .average();
     }
@@ -79,7 +78,11 @@ public final class MusicGroupImpl implements MusicGroup {
 
     @Override
     public Optional<String> longestAlbum() {
-        return this.songs.stream().collect(, Collectors.summarizingDouble());
+        return this.songs.stream()
+            .filter(t -> t.getAlbumName().isPresent())
+            .collect(Collectors.groupingBy(t -> t.getAlbumName(), Collectors.summingDouble(t -> t.getDuration())))
+            .entrySet().stream()
+            .max(Comparator.comparingDouble(Entry::getValue)).get().getKey();
     }
 
     private static final class Song {

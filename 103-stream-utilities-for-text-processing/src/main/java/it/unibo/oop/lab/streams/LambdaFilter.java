@@ -6,7 +6,10 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
+import java.util.Locale;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -33,12 +36,22 @@ import javax.swing.JTextArea;
 public final class LambdaFilter extends JFrame {
 
     private static final long serialVersionUID = 1760990730218643730L;
+    private static final String ANY_NON_WORD = "(\\s|\\p{Punct})+";
 
     private enum Command {
         /**
          * Commands.
          */
-        IDENTITY("No modifications", Function.identity());
+        IDENTITY("No modifications", Function.identity()),
+        LOWERCASE("Convert to lowercase", t -> t.toLowerCase(Locale.getDefault())), 
+        COUNTCHARS("Count the number of chars", t -> Integer.toString(t.length())),
+        COUNTLINES("Count the number of lines", t -> Integer.toString(t.split("\n").length)),
+        ORDERED("Sort all the words", t -> Stream.of(t.split(ANY_NON_WORD)).sorted().map(s -> s + " ").collect(Collectors.joining())),
+        // trasformiamo la lista di parola in una mappa nella quale come key c'è la parola e come valore 1 (il conteggio)
+        // andiamo poi a raggruppare le parole uguali e a sommare i vari conteggi
+        FREQUENCY("Write the count for each word", t -> Stream.of(t.split(ANY_NON_WORD))
+            .collect(Collectors.toMap(s -> s, s -> 1, (s1, s2) -> s1 + s2))
+            .entrySet().stream().map(s -> s.getKey() + " -> " + s.getValue()).collect(Collectors.joining("\n")));
 
         private final String commandName;
         private final Function<String, String> fun;
